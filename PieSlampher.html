@@ -1,4 +1,4 @@
-<script src="http://netpie.io/microgear.js"></script>
+<script src="https://netpie.io/microgear.js"></script>
 
 <script>
 
@@ -17,7 +17,7 @@
 		secret: appsecret,
 		alias : "pieslampherhtml"
 	});
-	var status = 0;
+	var state = 0;
 
 
 	microgear.on('message',function(topic,msg) {
@@ -34,11 +34,11 @@
 	microgear.on('connected', function() {
 		microgear.subscribe('/pieslampher/state');
 		microgear.chat('pieslampher','?');
-		document.getElementById("data").innerHTML = "<FONT color=#FFFFFF>ONLINE</FONT>";
+		document.getElementById("data").innerHTML = "<FONT color=#00BB00>ONLINE</FONT>";
 	});
 
 	microgear.on('disconnected', function() {
-		alert('microgear is disconnected....');
+		document.getElementById("data").innerHTML = "<FONT color=#DDDDDD>OFFLINE</FONT>";
 	});
 
 	microgear.resettoken(function(err) {
