@@ -1,11 +1,6 @@
-#include <AuthClient.h>
-#include <MicroGear.h>
-#include <MQTTClient.h>
-#include <SHA1.h>
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <EEPROM.h>
 #include <MicroGear.h>
+
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
@@ -24,15 +19,18 @@ WiFiClient client;
 AuthClient *authclient;
 
 char state = 0;
-char tosendstate = 0;
+char stateOutdated = 0;
 char buff[16];
 
 MicroGear microgear(client);
 
 void sendState() {
-  tosendstate = 0;
-  sprintf(buff,"%d",state);
-  microgear.publish("/pieslampher/state",buff);
+  if (state==0)
+    microgear.publish("/pieslampher/state","0");
+  else
+    microgear.publish("/pieslampher/state","1");
+  Serial.println("send state..");
+  stateOutdated = 0;
 }
 
 void updateIO() {
@@ -54,23 +52,24 @@ void updateIO() {
 }
 
 void onMsghandler(char *topic, uint8_t* msg, unsigned int msglen) {
-  int s;
-  char *m = (char *)msg;
-  m[msglen] = '\0';
-
-  Serial.println(m);
-  s = atoi(m);
+  char m = *(char *)msg;
   
-  if (s == 1) state = 1;
-  else state = 0;
-
-  updateIO();
-  tosendstate = 1;
+  Serial.print("Incoming message --> ");
+  msg[msglen] = '\0';
+  Serial.println((char *)msg);
+  
+  if (m == '0' || m == '1') {
+    state = m=='0'?0:1;
+    EEPROM.write(EEPROM_STATE_ADDRESS, state);
+    EEPROM.commit();
+    updateIO();
+  }
+  if (m == '0' || m == '1' || m == '?') stateOutdated = 1;
 }
 
 void onConnected(char *attribute, uint8_t* msg, unsigned int msglen) {
   Serial.println("Connected to NETPIE...");
-  tosendstate = 1;
+  stateOutdated = 1;
 }
 
 static void onButtonPressed(void) {
@@ -79,7 +78,7 @@ static void onButtonPressed(void) {
   else state = 1;
   
   updateIO();
-  tosendstate = 1;
+  stateOutdated = 1;
 }
 
 void setup() {
@@ -105,17 +104,19 @@ void setup() {
       ESP.reset();
       delay(5000);
     }
-  
+    
     microgear.on(MESSAGE,onMsghandler);
     microgear.on(CONNECTED,onConnected);
-
+ 
+    //microgear.resetToken();
+    
     microgear.init(KEY,SECRET,ALIAS);
     microgear.connect(APPID);
 }
 
 void loop() {
   if (microgear.connected()) {
-    if (tosendstate) sendState();
+    if (stateOutdated) sendState();
     microgear.loop();
   }
   else {
