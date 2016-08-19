@@ -15,7 +15,7 @@
 	var microgear = Microgear.create({
 		key: appkey,
 		secret: appsecret,
-		alias : "pieslampherhtml"
+		alias : "piebulb1html"
 	});
 	var state = 0;
 
@@ -32,8 +32,8 @@
 	});
 
 	microgear.on('connected', function() {
-		microgear.subscribe('/pieslampher/state');
-		microgear.chat('pieslampher','?');
+		microgear.subscribe('/piebulb1/state');
+		microgear.chat('piebulb1','?');
 		document.getElementById("data").innerHTML = "<FONT color=#00BB00>ONLINE</FONT>";
 	});
 
@@ -47,9 +47,9 @@
 
     function toggle() {
         switch (state) {
-            case 0 :  microgear.chat('pieslampher','1');
+            case 0 :  microgear.chat('piebulb1','1');
                       break;
-            case 1 :  microgear.chat('pieslampher','0');
+            case 1 :  microgear.chat('piebulb1','0');
                       break;
         }
     }
